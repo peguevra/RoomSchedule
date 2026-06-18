@@ -1,171 +1,97 @@
-let calendar;
-
-function initializeCalendar() {
+initializeCalendar() {
 
     const calendarEl =
         document.getElementById("calendar");
 
     calendar =
-        new FullCalendar.Calendar(
-            calendarEl,
-            {
-                locale: "ja",
-                initialView: "dayGridMonth",
-                height: "auto",
+        new FullCalendar.Calendar(calendarEl, {
 
-                // 日付タップ → 予約登録
-                dateClick: async function(info) {
+            locale: "ja",
 
-                    const userName =
-                        prompt("名前を入力してください");
+            initialView: "dayGridMonth",
 
-                    if (!userName) return;
+            height: "auto",
 
-                    const startTime =
-                        await createTimeSelector("開始時間");
+            // ★追加（ヘッダー簡素化）
+            headerToolbar: {
+                left: "title",
+                center: "",
+                right: ""
+            },
 
-                    if (!startTime) return;
+            // ★追加（日付番号を非表示）
+            dayCellContent: function(arg) {
+                return "";   // ← これで日付数字消える
+            },
 
-                    const endTime =
-                        await createTimeSelector("終了時間");
+            dateClick: async function(info) {
 
-                    if (!endTime) return;
+                const userName =
+                    prompt("名前を入力してください");
 
-                    await addReservation(
-                        info.dateStr,
-                        userName,
-                        startTime,
-                        endTime
-                    );
+                if (!userName) return;
 
-                },
+                const startTime =
+                    await createTimeSelector("開始時間");
 
-                // 予約クリック → 詳細表示
-                eventClick: function(info) {
+                if (!startTime) return;
 
-                    const e = info.event;
+                const endTime =
+                    await createTimeSelector("終了時間");
 
-                    const name =
-                        e.extendedProps.user_name;
+                if (!endTime) return;
 
-                    const start =
-                        e.start.toTimeString().substring(0, 5);
+                await addReservation(
+                    info.dateStr,
+                    userName,
+                    startTime,
+                    endTime
+                );
+            },
 
-                    const end =
-                        e.end.toTimeString().substring(0, 5);
+            eventClick: function(info) {
 
-                    alert(
-                        "予約詳細\n\n" +
-                        "名前：" + name + "\n" +
-                        "時間：" + start + " - " + end
-                    );
+                const e = info.event;
 
-                },
+                const name =
+                    e.extendedProps.user_name;
 
-                // 表示制御（崩れ防止）
-                eventContent: function(arg) {
+                const start =
+                    e.start.toTimeString().substring(0,5);
 
-                    const e = arg.event;
+                const end =
+                    e.end.toTimeString().substring(0,5);
 
-                    const name =
-                        e.extendedProps.user_name ?? "";
+                alert(
+                    "予約詳細\n\n" +
+                    name + "\n" +
+                    start + "-" + end
+                );
+            },
 
-                    const start =
-                        e.start.toTimeString().substring(0, 5);
+            eventContent: function(arg) {
 
-                    const end =
-                        e.end.toTimeString().substring(0, 5);
+                const e = arg.event;
 
-                    return {
-                        html:
-                            `<div class="event-box">` +
-                            `${name} ${start}-${end}` +
-                            `</div>`
-                    };
-                }
+                const name =
+                    e.extendedProps.user_name ?? "";
+
+                const start =
+                    e.start.toTimeString().substring(0,5);
+
+                const end =
+                    e.end.toTimeString().substring(0,5);
+
+                return {
+                    html:
+                        `<div class="event-box">` +
+                        `${name} ${start}-${end}` +
+                        `</div>`
+                };
             }
-        );
+        });
 
     calendar.render();
 
     window.calendar = calendar;
-}
-
-/**
- * 30分刻み時間セレクタ（iPad対応）
- */
-function createTimeSelector(labelText) {
-
-    return new Promise(resolve => {
-
-        const wrapper =
-            document.createElement("div");
-
-        wrapper.style.position = "fixed";
-        wrapper.style.top = "30%";
-        wrapper.style.left = "50%";
-        wrapper.style.transform = "translate(-50%, -50%)";
-        wrapper.style.background = "#fff";
-        wrapper.style.padding = "20px";
-        wrapper.style.border = "1px solid #ccc";
-        wrapper.style.zIndex = "9999";
-        wrapper.style.borderRadius = "8px";
-
-        const label =
-            document.createElement("div");
-
-        label.textContent = labelText;
-        label.style.marginBottom = "10px";
-        label.style.fontSize = "16px";
-
-        const select =
-            document.createElement("select");
-
-        select.style.fontSize = "18px";
-        select.style.padding = "8px";
-
-        // 30分刻み生成
-        for (let h = 0; h < 24; h++) {
-
-            for (let m of [0, 30]) {
-
-                const hhmm =
-                    String(h).padStart(2, "0") +
-                    ":" +
-                    String(m).padStart(2, "0");
-
-                const opt =
-                    document.createElement("option");
-
-                opt.value = hhmm;
-                opt.textContent = hhmm;
-
-                select.appendChild(opt);
-            }
-        }
-
-        const btn =
-            document.createElement("button");
-
-        btn.textContent = "決定";
-        btn.style.marginLeft = "10px";
-        btn.style.fontSize = "16px";
-
-        btn.onclick = () => {
-
-            const value = select.value;
-
-            document.body.removeChild(wrapper);
-
-            resolve(value);
-        };
-
-        wrapper.appendChild(label);
-        wrapper.appendChild(select);
-        wrapper.appendChild(btn);
-
-        document.body.appendChild(wrapper);
-
-    });
-
 }

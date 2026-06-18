@@ -13,41 +13,18 @@ function initializeCalendar() {
                 initialView: "dayGridMonth",
                 height: "auto",
 
-                // 「1日」→「1」
                 dayCellContent: function(arg) {
-
                     return arg.dayNumberText.replace("日", "");
-
                 },
 
-                // 日付タップ → 予約登録
                 dateClick: async function(info) {
 
-                    const userName =
-                        prompt("名前を入力してください");
-
-                    if (!userName) return;
-
-                    const startTime =
-                        await createTimeSelector("開始時間");
-
-                    if (!startTime) return;
-
-                    const endTime =
-                        await createTimeSelector("終了時間");
-
-                    if (!endTime) return;
-
-                    await addReservation(
-                        info.dateStr,
-                        userName,
-                        startTime,
-                        endTime
+                    showReservationModal(
+                        info.dateStr
                     );
 
                 },
 
-                // 予約タップ → 詳細表示
                 eventClick: function(info) {
 
                     const e = info.event;
@@ -69,7 +46,6 @@ function initializeCalendar() {
 
                 },
 
-                // イベント表示
                 eventContent: function(arg) {
 
                     const e = arg.event;
@@ -99,82 +75,167 @@ function initializeCalendar() {
     window.calendar = calendar;
 }
 
-/**
- * 30分刻み時間選択
- */
-function createTimeSelector(labelText) {
+function showReservationModal(reserveDate) {
 
-    return new Promise(resolve => {
+    const overlay =
+        document.createElement("div");
 
-        const wrapper =
-            document.createElement("div");
+    overlay.className =
+        "modal-overlay";
 
-        wrapper.style.position = "fixed";
-        wrapper.style.top = "30%";
-        wrapper.style.left = "50%";
-        wrapper.style.transform =
-            "translate(-50%, -50%)";
+    overlay.innerHTML = `
 
-        wrapper.style.background = "#fff";
-        wrapper.style.padding = "20px";
-        wrapper.style.border = "1px solid #ccc";
-        wrapper.style.borderRadius = "8px";
-        wrapper.style.zIndex = "9999";
+        <div class="modal-box">
 
-        const label =
-            document.createElement("div");
+            <h3>予約登録</h3>
 
-        label.textContent = labelText;
-        label.style.marginBottom = "10px";
+            <div class="form-row">
+                <label>名前</label>
+                <input
+                    type="text"
+                    id="reserveName">
+            </div>
 
-        const select =
-            document.createElement("select");
+            <div class="form-row">
+                <label>開始時間</label>
+                <select id="startTime"></select>
+            </div>
 
-        select.style.fontSize = "18px";
-        select.style.padding = "8px";
+            <div class="form-row">
+                <label>終了時間</label>
+                <select id="endTime"></select>
+            </div>
+
+            <div class="button-row">
+                <button id="saveBtn">
+                    登録
+                </button>
+
+                <button id="cancelBtn">
+                    キャンセル
+                </button>
+            </div>
+
+        </div>
+
+    `;
+
+    document.body.appendChild(
+        overlay
+    );
+
+    const startSelect =
+        document.getElementById(
+            "startTime"
+        );
+
+    const endSelect =
+        document.getElementById(
+            "endTime"
+        );
+
+    for (let h = 0; h < 24; h++) {
+
+        for (let m of [0, 30]) {
+
+            const hhmm =
+                String(h).padStart(2, "0")
+                + ":"
+                + String(m).padStart(2, "0");
+
+            startSelect.add(
+                new Option(
+                    hhmm,
+                    hhmm
+                )
+            );
+        }
+    }
+
+    function rebuildEndTimes() {
+
+        const start =
+            startSelect.value;
+
+        endSelect.innerHTML = "";
 
         for (let h = 0; h < 24; h++) {
 
             for (let m of [0, 30]) {
 
                 const hhmm =
-                    String(h).padStart(2, "0") +
-                    ":" +
-                    String(m).padStart(2, "0");
+                    String(h).padStart(2, "0")
+                    + ":"
+                    + String(m).padStart(2, "0");
 
-                const option =
-                    document.createElement("option");
+                if (
+                    hhmm <= start
+                ) continue;
 
-                option.value = hhmm;
-                option.textContent = hhmm;
-
-                select.appendChild(option);
-
+                endSelect.add(
+                    new Option(
+                        hhmm,
+                        hhmm
+                    )
+                );
             }
         }
+    }
 
-        const button =
-            document.createElement("button");
+    rebuildEndTimes();
 
-        button.textContent = "決定";
-        button.style.marginLeft = "10px";
+    startSelect.addEventListener(
+        "change",
+        rebuildEndTimes
+    );
 
-        button.onclick = () => {
+    document
+        .getElementById(
+            "cancelBtn"
+        )
+        .onclick = () => {
 
-            const value = select.value;
-
-            document.body.removeChild(wrapper);
-
-            resolve(value);
+            overlay.remove();
 
         };
 
-        wrapper.appendChild(label);
-        wrapper.appendChild(select);
-        wrapper.appendChild(button);
+    document
+        .getElementById(
+            "saveBtn"
+        )
+        .onclick = async () => {
 
-        document.body.appendChild(wrapper);
+            const userName =
+                document
+                    .getElementById(
+                        "reserveName"
+                    )
+                    .value
+                    .trim();
 
-    });
+            if (!userName) {
 
+                alert(
+                    "名前を入力してください"
+                );
+
+                return;
+            }
+
+            const startTime =
+                startSelect.value;
+
+            const endTime =
+                endSelect.value;
+
+            await addReservation(
+                reserveDate,
+                userName,
+                startTime,
+                endTime
+            );
+
+            overlay.remove();
+
+        };
 }

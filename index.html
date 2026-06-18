@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>会議室予約</title>
+
+    <link rel="stylesheet" href="css/style.css">
+
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/index.global.min.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/index.global.min.js"></script>
+
+</head>
+
+<body>
+
+    <h1>会議室予約</h1>
+
+    <div class="controls">
+
+        <div>
+            <label for="roomSelect">部屋</label>
+            <select id="roomSelect">
+                <option>読込中...</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="yearSelect">年</label>
+            <select id="yearSelect"></select>
+        </div>
+
+        <div>
+            <label for="monthSelect">月</label>
+            <select id="monthSelect"></select>
+        </div>
+
+    </div>
+
+    <div id="calendar"></div>
+
+    <script src="js/supabase.js"></script>
+    <script src="js/calendar.js"></script>
+    <script src="js/app.js"></script>
+
+</body>
+
+</html>
